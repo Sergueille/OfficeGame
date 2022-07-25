@@ -11,6 +11,7 @@ public class PlayerController : MonoBehaviour
 
     public Rigidbody playerBody;
     public Transform playerParent;
+    public Transform heldItem;
 
     public Image knob;
     public GameObject leftAction;
@@ -35,10 +36,13 @@ public class PlayerController : MonoBehaviour
 
     [NonSerialized] public Camera mainCam;
 
+    [NonSerialized] public List<Sheet> sheets;
+
     private void Awake()
     {
         instance = this;
         mainCam = gameObject.GetComponent<Camera>();
+        sheets = new List<Sheet>();
     }
 
     private void Update()
@@ -97,13 +101,11 @@ public class PlayerController : MonoBehaviour
                 exitingAttach = true;
                 Cursor.lockState = CursorLockMode.Locked;
 
-                Quaternion oldCamRotation = gameObject.transform.rotation;
                 Vector3 newRotation = Quaternion.LookRotation(attachPoint.position - transform.parent.position).eulerAngles;
-                playerBody.MoveRotation(Quaternion.Euler(0, newRotation.y, 0));
-                gameObject.transform.rotation = oldCamRotation;
 
                 LeanTween.moveLocal(gameObject, Vector3.zero, attachementDuration).setEaseInOutQuad();
-                LeanTween.rotate(gameObject, newRotation, attachementDuration).setEaseInOutQuad()
+                LeanTween.rotate(playerBody.gameObject, new Vector3(0, newRotation.y, 0), attachementDuration).setEaseInOutQuad();
+                LeanTween.rotateLocal(gameObject, new Vector3(newRotation.x, 0, 0), attachementDuration).setEaseInOutQuad()
                 .setOnComplete(() =>
                 {
                     isAttached = false;
