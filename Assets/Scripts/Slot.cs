@@ -38,7 +38,7 @@ public class Slot : InteractObject
             }
 
             rightActionName = "Prendre la feuille";
-            rightAction = TakeSheet;
+            rightAction = () => { TakeSheet(); };
         }
     }
 
@@ -83,6 +83,9 @@ public class Slot : InteractObject
 
     public void ReadSheet()
     {
+        sheets[^1].CanFocus = true;
+        PlayerController.instance.previousAttach = PlayerController.instance.attachPoint;
+        PlayerController.instance.isReadingSheet = true;
         PlayerController.instance.AttachTo(cameraAttachement);
     }
 }

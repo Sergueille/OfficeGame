@@ -29,6 +29,8 @@ public class PlayerController : MonoBehaviour
 
     [NonSerialized] public bool isAttached = false;
     [NonSerialized] public Transform attachPoint = null;
+    [NonSerialized] public bool isReadingSheet = false;
+    [NonSerialized] public Transform previousAttach = null;
 
     private Vector2 smoothSpeed;
     private Vector2 smoothSpeedSpeed;
@@ -93,7 +95,7 @@ public class PlayerController : MonoBehaviour
                 + (smoothSpeed.x * Time.deltaTime * playerBody.transform.right);
             playerBody.MovePosition(newPos);
         }
-        else
+        else if (!isReadingSheet)
         {
             // Trying to move -> exit attachement
             if (targetMovement != Vector2.zero && !exitingAttach)
@@ -117,54 +119,63 @@ public class PlayerController : MonoBehaviour
 
 
         // Interaction
-        LayerMask mask = LayerMask.GetMask("Interact");
-        InteractObject obj = null;
-
-        Ray mouseRay = mainCam.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(mouseRay, out RaycastHit hit, mask))
+        if (!isReadingSheet)
         {
-            obj = hit.collider.gameObject.GetComponent<InteractObject>();
-        }
+            LayerMask mask = LayerMask.GetMask("Interact");
+            InteractObject obj = null;
 
-        if (obj != null && hit.distance < obj.interactMaxDist)
-        {
-            if (obj.leftAction != null && obj.leftActionName != "")
+            Ray mouseRay = mainCam.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(mouseRay, out RaycastHit hit, mask))
             {
-                leftAction.SetActive(true);
-                leftActionText.text = obj.leftActionName;
+                obj = hit.collider.gameObject.GetComponent<InteractObject>();
+            }
 
-                if (Input.GetMouseButtonUp(0))
-                    obj.leftAction();
+            if (obj != null && hit.distance < obj.interactMaxDist)
+            {
+                if (obj.leftAction != null && obj.leftActionName != "")
+                {
+                    leftAction.SetActive(true);
+                    leftActionText.text = obj.leftActionName;
+
+                    if (Input.GetMouseButtonUp(0))
+                        obj.leftAction();
+                }
+                else
+                {
+                    leftAction.SetActive(false);
+                }
+
+                if (obj.rightAction != null && obj.rightActionName != "")
+                {
+                    rightAction.SetActive(true);
+                    rightActionText.text = obj.rightActionName;
+
+                    if (Input.GetMouseButtonUp(1))
+                        obj.rightAction();
+                }
+                else
+                {
+                    rightAction.SetActive(false);
+                }
+
+                knob.color = knobHoverColor;
+                LayoutRebuilder.ForceRebuildLayoutImmediate(leftAction.transform.parent.GetComponent<RectTransform>());
             }
             else
             {
+                knob.color = knobNormalColor;
                 leftAction.SetActive(false);
-            }
-
-            if (obj.rightAction != null && obj.rightActionName != "")
-            {
-                rightAction.SetActive(true);
-                rightActionText.text = obj.rightActionName;
-
-                if (Input.GetMouseButtonUp(1))
-                    obj.rightAction();
-            }
-            else
-            {
                 rightAction.SetActive(false);
             }
 
-            knob.color = knobHoverColor;
-            LayoutRebuilder.ForceRebuildLayoutImmediate(leftAction.transform.parent.GetComponent<RectTransform>());
+            knob.enabled = !isAttached;
         }
         else
         {
-            knob.color = knobNormalColor;
+            knob.enabled = false;
             leftAction.SetActive(false);
             rightAction.SetActive(false);
         }
-
-        knob.enabled = !isAttached;
     }
 
     public void AttachTo(Transform newTranform)
