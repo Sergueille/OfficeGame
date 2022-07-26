@@ -10,6 +10,8 @@ public class Slot : InteractObject
 
     public List<Sheet> sheets;
     public float movementDuration = 0.3f;
+    public float maxRandomOrientation = 10;
+    public float sheetSpace = 0.003f;
 
     private void Update()
     {
@@ -49,15 +51,30 @@ public class Slot : InteractObject
         sheets.Add(sheet);
         PlayerController.instance.sheets.RemoveAt(PlayerController.instance.sheets.Count - 1);
 
+        float randomOri = Random.Range(-maxRandomOrientation, maxRandomOrientation);
+        float finalY = sheetSpace * (sheets.Count - 1);
+
         sheet.transform.parent = sheetIntermediateAttachement;
         LeanTween.moveLocal(sheet.gameObject, Vector3.zero, movementDuration / 2).setEaseInOutQuad();
         LeanTween.rotateLocal(sheet.gameObject, Vector3.zero, movementDuration / 2).setEaseInOutQuad().setOnComplete(() =>
         {
             sheet.IsOverlay = false;
             sheet.transform.parent = sheetAttachement;
-            LeanTween.moveLocal(sheet.gameObject, Vector3.zero, movementDuration / 2).setEaseInOutQuad();
-            LeanTween.rotateLocal(sheet.gameObject, Vector3.zero, movementDuration / 2).setEaseInOutQuad();
+            LeanTween.moveLocal(sheet.gameObject, new Vector3(0, finalY, 0), movementDuration / 2).setEaseInOutQuad();
+            LeanTween.rotateLocal(sheet.gameObject, new Vector3(0, randomOri, 0), movementDuration / 2).setEaseInOutQuad();
         });
+    }
+
+    public void PutSheetImmediate(Sheet sheet)
+    {
+        sheets.Add(sheet);
+        sheet.IsOverlay = false;
+        sheet.transform.parent = sheetAttachement;
+
+        float randomOri = Random.Range(-maxRandomOrientation, maxRandomOrientation);
+        float finalY = sheetSpace * (sheets.Count - 1);
+        sheet.gameObject.transform.localPosition = new Vector3(0, finalY, 0);
+        sheet.gameObject.transform.localRotation = Quaternion.Euler(0, randomOri, 0);
     }
 
     public void TakeSheet()

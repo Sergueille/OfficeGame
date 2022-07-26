@@ -2,10 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class Sheet : MonoBehaviour
 {
     [SerializeField] private GraphicRaycaster raycaster;
+    [SerializeField] private Canvas canvas;
+    [SerializeField] private TextMeshProUGUI title;
+
+    public RectTransform UIContainer;
 
     public bool IsOverlay
     {
@@ -25,9 +30,22 @@ public class Sheet : MonoBehaviour
         get => raycaster.enabled;
     }
 
+    public string Title
+    {
+        set
+        {
+            title.text = value;
+        }
+    }
+
     private void Awake()
     {
         CanFocus = false;
+    }
+
+    private void Start()
+    {
+        canvas.worldCamera = PlayerController.instance.mainCam;
     }
 
     private void SetLayerRecusive(GameObject go, int layer)
