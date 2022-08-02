@@ -176,6 +176,18 @@ public class PlayerController : MonoBehaviour
             leftAction.SetActive(false);
             rightAction.SetActive(false);
         }
+
+        // Disable held sheets
+        if (sheets.Count > 0)
+        {
+            if (sheets[^1].gameObject.transform.position == heldItem.position) // Wait until the last sheet finishes the animation
+                for (int i = 0; i < sheets.Count - 1; i++)
+                {
+                    sheets[i].gameObject.SetActive(false);
+                }
+
+            sheets[^1].gameObject.SetActive(true);
+        }
     }
 
     public void AttachTo(Transform newTranform)

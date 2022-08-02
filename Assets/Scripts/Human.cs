@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class Human
 {
-    public enum DateFormat { numeric, written, numericShortYear }
+    public enum DateFormat { numeric, written, numericShortYear, lastValue }
+    public enum FamilySituation { single, married, divorced, lastValue }
 
     public string name;
     public string firstName;
@@ -15,16 +16,61 @@ public class Human
 
     public int sex; // 1: male, 2: female, 3: other
 
-    public Human()
+    public string customerID;
+
+    public FamilySituation familySituation;
+    public Human spouse; 
+    public List<Human> childrens;
+
+    public Human(int forceSex = -1, string forceName = "", bool child = false)
     {
-        if (Random.value < GameManager.instance.otherGenderProbability) sex = 3;
-        else if (Random.value < 0.5) sex = 1;
-        else sex = 2;
+        if (forceSex == -1)
+        {
+            if (Random.value < GameManager.instance.otherGenderProbability) sex = 3;
+            else if (Random.value < 0.5) sex = 1;
+            else sex = 2;
+        }
+        else sex = forceSex;
 
         firstName = GetRandomFistName(sex);
-        name = GetRandomName();
+        name = forceName != "" ? forceName : GetRandomName();
 
-        GetRandomBirth(ref bornYear, ref bornMonth, ref bornDay);
+        GetRandomBirth(ref bornYear, ref bornMonth, ref bornDay, child);
+
+        childrens = new();
+
+        if (!child)
+        {
+            customerID = GetRandomCustomerID();
+
+            familySituation = (FamilySituation)Random.Range(0, (int)FamilySituation.lastValue);
+            if (familySituation != FamilySituation.single)
+            {
+                if (Random.value > 0.5)
+                    spouse = new((sex == 1) ? 2 : 1, forceName: name);
+                else
+                    spouse = new((sex == 1) ? 2 : 1);
+
+                int childCount = Random.Range(0, GameManager.instance.maxChildCount + 1);
+
+                string childsName;
+                if (Random.value > 0.3)
+                    childsName = spouse.name;
+                else if (Random.value > 0.5 || name == spouse.name)
+                    childsName = name;
+                else if (Random.value > 0.5)
+                    childsName = $"{name}-{spouse.name}";
+                else
+                    childsName = $"{spouse.name}-{name}";
+
+                for (int i = 0; i < childCount; i++)
+                {
+                    childrens.Add(new Human(-1, childsName, true));
+                }
+
+                childrens.Sort((c1, c2) => c1.bornYear - c2.bornYear);
+            }
+        }
     }
 
     public string FullName 
@@ -53,7 +99,7 @@ public class Human
         }
         else if (txt.Length > digitCount)
         {
-            return txt[^(digitCount+1)..];
+            return txt[^(digitCount)..];
         }
         else
         {
@@ -79,11 +125,40 @@ public class Human
         return names[Random.Range(0, names.Length)]; ;
     }
 
-    public static void GetRandomBirth(ref int year, ref int month, ref int day)
+    public static void GetRandomBirth(ref int year, ref int month, ref int day, bool child = false)
     {
-        year = Random.Range(GameManager.instance.birthYearRange.start, GameManager.instance.birthYearRange.end);
+        if (child)
+            year = Random.Range(GameManager.instance.childrensYearRange.start, GameManager.instance.childrensYearRange.end);
+        else
+            year = Random.Range(GameManager.instance.birthYearRange.start, GameManager.instance.birthYearRange.end);
+
         month = Random.Range(0, 12);
         day = Random.Range(1, daysInMonth[month] + 1);
+    }
+
+    public static string GetRandomCustomerID()
+    {
+        string res = "";
+
+        for (int i = 0; i < GameManager.instance.customerIDLength; i++)
+        {
+            float rand = Random.value;
+
+            if (rand < 0.5) // Number
+            {
+                res += Random.Range(0, 10).ToString();
+            }
+            else if (rand < 0.75) // Lowercase
+            {
+                res += (char)Random.Range('a', 'z'+1);
+            }
+            else // Uppercase
+            {
+                res += (char)Random.Range('A', 'Z' + 1);
+            }
+        }
+
+        return res;
     }
     
     public static string[] femaleNames = 
@@ -113,6 +188,16 @@ public class Human
         "Martinez","Gerard","Roche","Renard","Schmitt","Roy","Leroux","Colin","Vidal","Caron",
         "Picard","Roger","Fabre","Aubert","Lemoine","Renaud","Dumas","Lacroix","Olivier","Philippe",
         "Bourgeois","Pierre","Benoit","Rey","Leclerc","Payet","Rolland","Leclercq","Guillaume","Lecomte",
+        "Lopez","Jean","Dupuy","Guillot","Hubert","Berger","Carpentier","Sanchez","Dupuis","Moulin",
+        "Louis","Deschamps","Huet","Vasseur","Perez","Boucher","Fleury","Royer","Klein","Jacquet",
+        "Adam","Paris","Poirier","Marty","Aubry","Guyot","Carre","Charles","Renault","Charpentier",
+        "Menard","Maillard","Baron","Bertin","Bailly","Herve","Schneider","Fernandez","Le","Collet",
+        "Leger","Bouvier","Julien","Prevost","Millet","Perrot","Daniel","Le","Cousin","Germain",
+        "Breton","Besson","Langlois","Remy","Le","Pelletier","Leveque","Perrier","Leblanc","Barre",
+        "Lebrun","Marchal","Weber","Mallet","Hamon","Boulanger","Jacob","Monnier","Michaud","Rodriguez",
+        "Guichard","Gillet","Etienne","Grondin","Poulain","Tessier","Chevallier","Collin","Chauvin","Da",
+        "Bouchet","Gay","Lemaitre","Benard","Marechal","Humbert","Reynaud","Antoine","Hoarau","Perret",
+        "Barthelemy","Cordier","Pichon","Lejeune","Gilbert","Lamy","Delaunay","Pasquier","Carlier","Laporte",
     };
 
     public static int[] daysInMonth =
