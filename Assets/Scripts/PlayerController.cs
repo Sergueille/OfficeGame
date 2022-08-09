@@ -31,6 +31,7 @@ public class PlayerController : MonoBehaviour
     [NonSerialized] public Transform attachPoint = null;
     [NonSerialized] public bool isReadingSheet = false;
     [NonSerialized] public Transform previousAttach = null;
+    [NonSerialized] public Vector3 rotationBeforeAttach;
 
     private Vector2 smoothSpeed;
     private Vector2 smoothSpeedSpeed;
@@ -89,11 +90,6 @@ public class PlayerController : MonoBehaviour
         if (!isAttached)
         {
             smoothSpeed = Vector2.SmoothDamp(smoothSpeed, targetMovement, ref smoothSpeedSpeed, speedSmooth);
-
-            Vector3 newPos = playerBody.position 
-                + (smoothSpeed.y * Time.deltaTime * playerBody.transform.forward) 
-                + (smoothSpeed.x * Time.deltaTime * playerBody.transform.right);
-            playerBody.MovePosition(newPos);
         }
         else if (!isReadingSheet)
         {
@@ -103,11 +99,9 @@ public class PlayerController : MonoBehaviour
                 exitingAttach = true;
                 Cursor.lockState = CursorLockMode.Locked;
 
-                Vector3 newRotation = Quaternion.LookRotation(attachPoint.position - transform.parent.position).eulerAngles;
-
                 LeanTween.moveLocal(gameObject, Vector3.zero, attachementDuration).setEaseInOutQuad();
-                LeanTween.rotate(playerBody.gameObject, new Vector3(0, newRotation.y, 0), attachementDuration).setEaseInOutQuad();
-                LeanTween.rotateLocal(gameObject, new Vector3(newRotation.x, 0, 0), attachementDuration).setEaseInOutQuad()
+                LeanTween.rotate(playerBody.gameObject, new Vector3(0, rotationBeforeAttach.y, 0), attachementDuration).setEaseInOutQuad();
+                LeanTween.rotateLocal(gameObject, new Vector3(rotationBeforeAttach.x, 0, 0), attachementDuration).setEaseInOutQuad()
                 .setOnComplete(() =>
                 {
                     isAttached = false;
@@ -190,10 +184,22 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private void FixedUpdate()
+    {
+        if (!isAttached)
+        {
+            Vector3 newPos = playerBody.position
+                        + (smoothSpeed.y * Time.deltaTime * playerBody.transform.forward)
+                        + (smoothSpeed.x * Time.deltaTime * playerBody.transform.right);
+            playerBody.MovePosition(newPos);
+        }
+    }
+
     public void AttachTo(Transform newTranform)
     {
         attachPoint = transform;
         isAttached = true;
+        rotationBeforeAttach = new Vector3(transform.eulerAngles.x, playerBody.gameObject.transform.eulerAngles.y, 0);
 
         LeanTween.move(gameObject, newTranform.position, attachementDuration).setEaseInOutQuad();
         LeanTween.rotate(gameObject, newTranform.rotation.eulerAngles, attachementDuration).setEaseInOutQuad();

@@ -15,6 +15,8 @@ public class Sheet : MonoBehaviour
     [Tooltip("The canvas of the sheet will be disabled if the camera is further than this distance")]
     public float maxVisibleDist;
 
+    public bool showCanvas = true;
+
     public bool IsOverlay
     {
         set
@@ -56,7 +58,7 @@ public class Sheet : MonoBehaviour
         Vector3 delta = transform.position - PlayerController.instance.mainCam.transform.position;
         float sqrDist = (delta.x * delta.x) + (delta.y * delta.y);
 
-        if (sqrDist > maxVisibleDist * maxVisibleDist)
+        if (!showCanvas || sqrDist > maxVisibleDist * maxVisibleDist)
         {
             canvas.gameObject.SetActive(false);
         }
@@ -87,11 +89,17 @@ public class Sheet : MonoBehaviour
         return Instantiate(prefab, UIContainer);
     }
 
-    public void AddBasicInfo(Human human)
+    public GameObject AddUI(List<GameObject> randomList)
     {
-        int randomID = Random.Range(0, GameManager.instance.basicInfoPrefabs.Count);
-        GameObject prefab = GameManager.instance.basicInfoPrefabs[randomID];
-        GameObject newGO = AddUI(prefab);
-        newGO.GetComponent<BasicInfoHandler>().Human = human;
+        int randomID = Random.Range(0, randomList.Count);
+        GameObject prefab = randomList[randomID];
+        return AddUI(prefab);
+    }
+
+    public GameObject AddUI(List<GameObject> randomList, Human human)
+    {
+        GameObject go = AddUI(randomList);
+        go.GetComponent<BasicInfoHandler>().Human = human;
+        return go;
     }
 }

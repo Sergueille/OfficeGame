@@ -48,6 +48,7 @@ public class Slot : InteractObject
     {
         Sheet sheet = PlayerController.instance.sheets[^1];
 
+
         sheets.Add(sheet);
         PlayerController.instance.sheets.RemoveAt(PlayerController.instance.sheets.Count - 1);
 
@@ -61,12 +62,19 @@ public class Slot : InteractObject
             sheet.IsOverlay = false;
             sheet.transform.parent = sheetAttachement;
             LeanTween.moveLocal(sheet.gameObject, new Vector3(0, finalY, 0), movementDuration / 2).setEaseInOutQuad();
-            LeanTween.rotateLocal(sheet.gameObject, new Vector3(0, randomOri, 0), movementDuration / 2).setEaseInOutQuad();
+            LeanTween.rotateLocal(sheet.gameObject, new Vector3(0, randomOri, 0), movementDuration / 2).setEaseInOutQuad().setOnComplete(() =>
+            {
+                if (sheets.Count > 1)
+                    sheets[^2].showCanvas = false;
+            });
         });
     }
 
     public void PutSheetImmediate(Sheet sheet)
     {
+        if (sheets.Count > 0)
+            sheets[^1].showCanvas = false;
+
         sheets.Add(sheet);
         sheet.IsOverlay = false;
         sheet.transform.parent = sheetAttachement;
@@ -95,6 +103,9 @@ public class Slot : InteractObject
                 LeanTween.moveLocal(sheet.gameObject, Vector3.zero, movementDuration / 2).setEaseInOutQuad();
                 LeanTween.rotateLocal(sheet.gameObject, Vector3.zero, movementDuration / 2).setEaseInOutQuad();
             });
+
+            if (sheets.Count > 0)
+                sheets[^1].showCanvas = true;
         }
     }
 

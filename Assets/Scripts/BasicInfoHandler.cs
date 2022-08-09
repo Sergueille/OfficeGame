@@ -6,11 +6,11 @@ using TMPro;
 
 public class BasicInfoHandler : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI fullName;
-    [SerializeField] private TextMeshProUGUI firstName;
-    [SerializeField] private TextMeshProUGUI lastName;
-    [SerializeField] private TextMeshProUGUI birth;
-    [SerializeField] private TextMeshProUGUI customerID;
+    [SerializeField] protected TextMeshProUGUI fullName;
+    [SerializeField] protected TextMeshProUGUI firstName;
+    [SerializeField] protected TextMeshProUGUI lastName;
+    [SerializeField] protected TextMeshProUGUI birth;
+    [SerializeField] protected TextMeshProUGUI customerID;
 
     private Human _human;
     public Human Human
@@ -23,7 +23,7 @@ public class BasicInfoHandler : MonoBehaviour
         }
     }
 
-    private void Refresh()
+    public virtual void Refresh()
     {
         if (fullName != null)
             fullName.text = Human.FullName;
@@ -34,7 +34,7 @@ public class BasicInfoHandler : MonoBehaviour
 
         if (birth != null)
         {
-            int randomFormat = Random.Range(0, (int)Human.DateFormat.lastValue);
+            int randomFormat = Random.Range(0, (int)Human.DateFormat.lastFullFormatValue + 1);
             birth.text = Human.GetFormattedBirth((Human.DateFormat)randomFormat);
         }
 

@@ -4,7 +4,13 @@ using UnityEngine;
 
 public class Human
 {
-    public enum DateFormat { numeric, written, numericShortYear, lastValue }
+    public enum DateFormat { 
+        numeric, 
+        written, 
+        numericShortYear, 
+        lastFullFormatValue = numericShortYear,
+        onlyYear
+    }
     public enum FamilySituation { single, married, divorced, lastValue }
 
     public string name;
@@ -14,9 +20,12 @@ public class Human
     public int bornMonth;
     public int bornDay;
 
-    public int sex; // 1: male, 2: female, 3: other
+    public bool sex; // false: male, true: female
 
     public string customerID;
+    public int signInYear;
+    public int signInMonth;
+    public int signInDay;
 
     public FamilySituation familySituation;
     public Human spouse; 
@@ -26,16 +35,15 @@ public class Human
     {
         if (forceSex == -1)
         {
-            if (Random.value < GameManager.instance.otherGenderProbability) sex = 3;
-            else if (Random.value < 0.5) sex = 1;
-            else sex = 2;
+            sex = Random.value < 0.5;
         }
-        else sex = forceSex;
+        else sex = forceSex == 1;
 
         firstName = GetRandomFistName(sex);
         name = forceName != "" ? forceName : GetRandomName();
 
         GetRandomBirth(ref bornYear, ref bornMonth, ref bornDay, child);
+        GetRandomBirth(ref signInYear, ref signInMonth, ref signInDay, true);
 
         childrens = new();
 
@@ -47,9 +55,9 @@ public class Human
             if (familySituation != FamilySituation.single)
             {
                 if (Random.value > 0.5)
-                    spouse = new((sex == 1) ? 2 : 1, forceName: name);
+                    spouse = new((sex) ? 0 : 1, forceName: name);
                 else
-                    spouse = new((sex == 1) ? 2 : 1);
+                    spouse = new((sex) ? 0 : 1);
 
                 int childCount = Random.Range(0, GameManager.instance.maxChildCount + 1);
 
@@ -80,11 +88,17 @@ public class Human
 
     public string GetFormattedBirth(DateFormat format)
     {
+        return GetFormattedDate(format, bornYear, bornMonth, bornDay);
+    }
+
+    public static string GetFormattedDate(DateFormat format, int year, int month = 1, int day = 1)
+    {
         return format switch
         {
-            DateFormat.numeric => $"{bornDay} {monthName[bornMonth]} {bornYear}",
-            DateFormat.written => $"{GetNumberText(bornDay, 2)}/{GetNumberText(bornMonth, 2)}/{bornYear}",
-            DateFormat.numericShortYear => $"{GetNumberText(bornDay, 2)}/{GetNumberText(bornMonth, 2)}/{GetNumberText(bornYear, 2)}",
+            DateFormat.numeric => $"{day} {monthName[month]} {year}",
+            DateFormat.written => $"{GetNumberText(day, 2)}/{GetNumberText(month, 2)}/{year}",
+            DateFormat.numericShortYear => $"{GetNumberText(day, 2)}/{GetNumberText(month, 2)}/{GetNumberText(year, 2)}",
+            DateFormat.onlyYear => year.ToString(),
             _ => throw new System.ArgumentException(),
         };
     }
@@ -107,14 +121,9 @@ public class Human
         }
     }
 
-    public static string GetRandomFistName(int sex)
+    public static string GetRandomFistName(bool sex)
     {
-        bool male;
-        if (sex == 1) male = true;
-        else if (sex == 2) male = false;
-        else male = Random.value > 0.5;
-
-        if (male)
+        if (!sex)
             return maleNames[Random.Range(0, maleNames.Length)];
         else
             return femaleNames[Random.Range(0, femaleNames.Length)];
@@ -159,6 +168,11 @@ public class Human
         }
 
         return res;
+    }
+
+    public string GetFamilySituationText()
+    {
+        return new string[] { "Célibataire", "Marié(e)", "Divorcé(e)" }[(int)familySituation];
     }
     
     public static string[] femaleNames = 
